@@ -1,5 +1,3 @@
-CURRENT_PITCH = 0.0
-NUM_OF_ITERATION = 0
-PITCH_LIST = []
+
 OCTAVE_BANDS = [50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
 ALL_NOTES = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
