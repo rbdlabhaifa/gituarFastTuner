@@ -29,7 +29,7 @@ if __name__ == "__main__":
         distance_to_pitch = lagrange_interpolation(x, y, target_pitch) - lagrange_interpolation(x, y, current_pitch)
 
         print(f"Detected pitch: {current_pitch}")
-        print(f"Target pitch: {current_pitch}")
+        print(f"Target pitch: {target_pitch}")
         print(f"Distance to target: {round(distance_to_pitch, 3)}")
         print("--------------------------------------------------")
 
