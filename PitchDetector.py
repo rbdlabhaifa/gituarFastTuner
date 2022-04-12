@@ -111,17 +111,22 @@ class PitchDetector:
 
             os.system('cls' if os.name == 'nt' else 'clear')
             if self.note_buffer.count(self.note_buffer[0]) == len(self.note_buffer):
-                print(f"Closest note: {closest_note} -> {max_freq}/{closest_pitch}")
                 self.detected_pitches.append(max_freq)
                 self.recent_pitch = max_freq
                 self.iterations += 1
 
     def detect(self):
         try:
-            with sd.InputStream(channels=1, callback=self.callback, blocksize=self.window_step,
-                                samplerate=self.sample_frequency):
-                while self.iterations < self.max_iterations:
-                    time.sleep(0.5)
-                return max(set(self.detected_pitches), key=self.detected_pitches.count)
+            input_stream = sd.InputStream(channels=1, callback=self.callback, blocksize=self.window_step,
+                                          samplerate=self.sample_frequency)
+            print(f"Collecting samples...")
+            print("---------------------- PLAY ----------------------")
+            input_stream.start()
+            while self.iterations < self.max_iterations:
+                time.sleep(0.5)
+            input_stream.stop()
+            input_stream.close()
+            print(f"\nCollected samples, evaluating...\n")
+            return max(set(self.detected_pitches), key=self.detected_pitches.count)
         except Exception as e:
             print(f"Caught exception: {e}")
