@@ -8,7 +8,6 @@ import sounddevice as sd
 
 class PitchDetector:
     def __init__(self, notes, octave_bands, iterations):
-
         self.notes = notes
         self.octave_bands = octave_bands
         self.iterations = 0
@@ -35,13 +34,13 @@ class PitchDetector:
 
     def find_closest_note(self, pitch):
         """
-      This function finds the closest note for a given pitch
-      Parameters:
-        pitch (float): pitch given in hertz
-      Returns:
-        closest_note (str): e.g. a, g#, ..
-        closest_pitch (float): pitch of the closest note in hertz
-      """
+        This function finds the closest note for a given pitch
+        Parameters:
+            pitch (float): pitch given in hertz
+        Returns:
+            closest_note (str): e.g. a, g#, ..
+            closest_pitch (float): pitch of the closest note in hertz
+        """
         notes_count = len(self.notes)
         i = int(np.round(np.log2(pitch / self.recent_pitch) * notes_count))
         closest_note = self.notes[i % notes_count] + str(notes_count // 3 + (i + notes_count // 4) // notes_count)
@@ -50,9 +49,9 @@ class PitchDetector:
 
     def callback(self, data, frames, time, status):
         """
-      Callback function of the InputStream method.
-      That's where the magic happens ;)
-      """
+        Callback function of the InputStream method.
+        This is where the magic happens ;)
+        """
         if any(data):
             self.window_samples = np.concatenate((self.window_samples, data[:, 0]))  # append new samples
             self.window_samples = self.window_samples[len(data[:, 0]):]  # remove old samples
