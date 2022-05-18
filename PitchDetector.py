@@ -126,6 +126,7 @@ class PitchDetector:
             input_stream.stop()
             input_stream.close()
             print(f"\nCollected samples, evaluating...\n")
+            print (f"pitches: {self.detected_pitches}")
             return max(set(self.detected_pitches), key=self.detected_pitches.count)
         except Exception as e:
             print(f"Caught exception: {e}")

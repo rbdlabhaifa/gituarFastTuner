@@ -32,7 +32,7 @@ class GuitarTuner:
     def detect_pitch(self):
         pitch_detector = PitchDetector(self.notes, self.octave_bands, self.config[DETECTOR_ITERATIONS])
         pitch_detector.detect()
-        return max(set(pitch_detector.detected_pitches))
+        return pitch_detector.detected_pitch
 
     def is_tuned(self, distance_to_pitch):
         frequency_change = self.frequency_change_per_degree[self.target_note]
