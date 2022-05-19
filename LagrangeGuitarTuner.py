@@ -1,7 +1,6 @@
-import json
+from json import load
 from PitchDetector import PitchDetector
 from AuxiliaryFunctions import countdown
-
 from ConfigSections import *
 
 
@@ -12,7 +11,7 @@ class LagrangeGuitarTuner:
         self.octave_bands = [50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
         self.notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
         f = open('samples.json')
-        self.samples = json.load(f)
+        self.samples = load(f)
         self.target_note = ''
 
     def detect_pitch(self):
