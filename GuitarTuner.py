@@ -1,4 +1,4 @@
-import json
+from json import load, dump
 from PitchDetector import PitchDetector
 from AuxiliaryFunctions import countdown
 from ConfigSections import *
@@ -13,7 +13,7 @@ class GuitarTuner:
         self.notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
         # Getting the adjusted frequency changes from config
-        self.config = json.load(open('config.json'))
+        self.config = load(open('config.json'))
         if FREQUENCY_CHANGES_PER_DEGREE in self.config:
             frequency_changes = self.config[FREQUENCY_CHANGES_PER_DEGREE]
             for change in frequency_changes:
@@ -59,7 +59,7 @@ class GuitarTuner:
         # Saving the new frequency changes to config
         self.config[FREQUENCY_CHANGES_PER_DEGREE] = self.frequency_change_per_degree
         f = open('config.json', 'w')
-        json.dump(self.config, f)
+        dump(self.config, f)
 
     def tune_note(self):
         target_pitch = self.frequencies[self.target_note]
