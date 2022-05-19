@@ -7,6 +7,7 @@ from ConfigSections import *
 
 class LagrangeGuitarTuner:
     def __init__(self):
+        self.iterations = 0
         self.frequencies = {"E4": 329.63, "B3": 246.94, "G3": 196.00, "D3": 146.83, "A2": 110.00, "E2": 82.41}
         self.octave_bands = [50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
         self.notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
@@ -56,67 +57,91 @@ class LagrangeGuitarTuner:
         print(f"Target pitch: {target_pitch}")
         print("get ready to play!")
         countdown(5)
-        first_detected_pitch = self.detect_pitch()
-        print(f"First detected pitch: {first_detected_pitch}")
+        current_pitch = self.detect_pitch()
+        print(f"First detected pitch: {current_pitch}")
 
-        distance_to_pitch = target_pitch - first_detected_pitch
+        distance_to_pitch = target_pitch - current_pitch
         if self.is_tuned(distance_to_pitch):
             # The note is already tuned
             return
 
-        first_turns, target_turns = self.get_instructions(first_detected_pitch, target_pitch)
-        self.print_instructions(target_turns - first_turns)
+        current_turns, target_turns = self.get_instructions(current_pitch, target_pitch)
+        self.print_instructions(target_turns - current_turns)
         print("Going again in", end=' ')
+        previous_turns = current_turns
         countdown(20)
+        current_pitch = self.detect_pitch()
 
-        second_detected_pitch = self.detect_pitch()
-        print(f"Second detected pitch: {second_detected_pitch}")
-
-        if not self.is_tuned(target_pitch - second_detected_pitch):
-            # Need to adjust the frequency changes
-            second_turns, target_turns = self.get_instructions(second_detected_pitch, target_pitch)
-            print (f"second_turns: {second_turns}")
-            print (f"targer_turns: {target_turns}")
-            off_percentage = (second_turns - first_turns) / (target_turns - first_turns)
+        while not self.is_tuned(target_pitch - current_pitch) and self.iterations < 3:
+            print(f"new detected pitch: {current_pitch}")
+            current_turns, target_turns = self.get_instructions(current_pitch, target_pitch)
+            print(f"current_turns: {current_turns}")
+            print(f"targert_turns: {target_turns}")
+            off_percentage = (current_turns - previous_turns) / (target_turns - previous_turns)
             print(f"off_percentage: {off_percentage}")
-            self.print_instructions((target_turns - second_turns) * (1 + 1/off_percentage))
+            self.print_instructions(target_turns - current_turns)
+            previous_turns = current_turns
             print("Going again in", end=' ')
+            self.iterations += 1
             countdown(20)
+            current_pitch = self.detect_pitch()
+        if self.is_tuned(target_pitch - current_pitch):
+            return
         else:
+            print(f"new detected pitch: {current_pitch}")
             return
 
-        third_detected_pitch = self.detect_pitch()
-        print(f"third detected pitch: {third_detected_pitch}")
 
-        if not self.is_tuned(target_pitch - third_detected_pitch):
-            # Need to adjust the frequency changes
-            third_turns, target_turns = self.get_instructions(third_detected_pitch, target_pitch)
-            print (f"second_turns: {third_turns}")
-            print (f"targer_turns: {target_turns}")
-            off_percentage = (third_turns - second_turns) / (target_turns - second_turns)
-            print(f"off_percentage: {off_percentage}")
-            self.print_instructions(target_turns - third_turns)
-            print("Going again in", end=' ')
-            countdown(20)
-        else:
-            return
 
-        forth_detected_pitch = self.detect_pitch()
-        print(f"forth detected pitch: {forth_detected_pitch}")
-        if not self.is_tuned(target_pitch - forth_detected_pitch):
-            # Need to adjust the frequency changes
-            forth_turns, target_turns = self.get_instructions(forth_detected_pitch, target_pitch)
-            print (f"second_turns: {forth_turns}")
-            print (f"targer_turns: {target_turns}")
-            off_percentage = (forth_turns - third_turns) / (target_turns - third_turns)
-            print(f"off_percentage: {off_percentage}")
-            self.print_instructions(target_turns - forth_turns)
-            print("Going again in", end=' ')
-            countdown(20)
-            last_detected_pitch = self.detect_pitch()
-            print(f"last detected pitch: {last_detected_pitch}")
-        else:
-            return
+
+        # second_detected_pitch = self.detect_pitch()
+        # print(f"Second detected pitch: {second_detected_pitch}")
+        #
+        # if not self.is_tuned(target_pitch - second_detected_pitch):
+        #     # Need to adjust the frequency changes
+        #     second_turns, target_turns = self.get_instructions(second_detected_pitch, target_pitch)
+        #     print (f"second_turns: {second_turns}")
+        #     print (f"targer_turns: {target_turns}")
+        #     off_percentage = (second_turns - first_turns) / (target_turns - first_turns)
+        #     print(f"off_percentage: {off_percentage}")
+        #     self.print_instructions((target_turns - second_turns) * (1 + 1/off_percentage))
+        #     print("Going again in", end=' ')
+        #     countdown(20)
+        # else:
+        #     return
+        #
+        # third_detected_pitch = self.detect_pitch()
+        # print(f"third detected pitch: {third_detected_pitch}")
+        #
+        # if not self.is_tuned(target_pitch - third_detected_pitch):
+        #     # Need to adjust the frequency changes
+        #     third_turns, target_turns = self.get_instructions(third_detected_pitch, target_pitch)
+        #     print (f"second_turns: {third_turns}")
+        #     print (f"targer_turns: {target_turns}")
+        #     off_percentage = (third_turns - second_turns) / (target_turns - second_turns)
+        #     print(f"off_percentage: {off_percentage}")
+        #     self.print_instructions(target_turns - third_turns)
+        #     print("Going again in", end=' ')
+        #     countdown(20)
+        # else:
+        #     return
+        #
+        # forth_detected_pitch = self.detect_pitch()
+        # print(f"forth detected pitch: {forth_detected_pitch}")
+        # if not self.is_tuned(target_pitch - forth_detected_pitch):
+        #     # Need to adjust the frequency changes
+        #     forth_turns, target_turns = self.get_instructions(forth_detected_pitch, target_pitch)
+        #     print (f"second_turns: {forth_turns}")
+        #     print (f"targer_turns: {target_turns}")
+        #     off_percentage = (forth_turns - third_turns) / (target_turns - third_turns)
+        #     print(f"off_percentage: {off_percentage}")
+        #     self.print_instructions(target_turns - forth_turns)
+        #     print("Going again in", end=' ')
+        #     countdown(20)
+        #     last_detected_pitch = self.detect_pitch()
+        #     print(f"last detected pitch: {last_detected_pitch}")
+        # else:
+        #     return
 
     def lagrange_interpolation(self, pitch):
         equation_result = 0
