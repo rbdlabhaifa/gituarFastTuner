@@ -12,19 +12,22 @@ class LagrangeGuitarTuner:
         self.notes = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
         f = open('samples.json')
         self.samples = load(f)
+        self.config = load(open('config.json'))
         self.target_note = ''
 
     def detect_pitch(self):
-        pitch_detector = PitchDetector(self.notes, self.octave_bands, DETECTOR_ITERATIONS)
+        pitch_detector = PitchDetector(self.notes, self.octave_bands, self.config[DETECTOR_ITERATIONS])
         detected_pitch = pitch_detector.detect()
         return detected_pitch
 
     def is_tuned(self, distance_to_pitch):
-        return -2 < distance_to_pitch < 2
+        return -self.config[TUNING_EPSILON] < distance_to_pitch < self.config[TUNING_EPSILON]
 
     def get_instructions(self, current_pitch, target_pitch):
         lagrange_target = self.lagrange_interpolation(target_pitch)
         lagrange_current = self.lagrange_interpolation(current_pitch)
+        print(f"lagrange target: {lagrange_target}")
+        print(f"lagrange current: {lagrange_current}")
         return lagrange_current, lagrange_target
 
     def print_instructions(self, distance_to_pitch):
@@ -42,10 +45,9 @@ class LagrangeGuitarTuner:
         target_pitch = self.frequencies[self.target_note]
         print(f"Target pitch: {target_pitch}")
         print("get ready to play!")
-        countdown(5)
+        countdown(self.config[START_COUNTDOWN])
         current_pitch = self.detect_pitch()
         print(f"First detected pitch: {current_pitch}")
-
         distance_to_pitch = target_pitch - current_pitch
         if self.is_tuned(distance_to_pitch):
             print(f"{self.target_note} is tuned.")
@@ -55,10 +57,10 @@ class LagrangeGuitarTuner:
         self.print_instructions(target_turns - current_turns)
         print("Going again in", end=' ')
         previous_turns = current_turns
-        countdown(COUNTDOWN_FROM)
+        countdown(self.config[INTERMISSION_COUNTDOWN])
         current_pitch = self.detect_pitch()
 
-        while not self.is_tuned(target_pitch - current_pitch) and self.iterations < 3:
+        while not self.is_tuned(target_pitch - current_pitch) and self.iterations < self.config[TUNER_ITERATIONS]:
             print(f"new detected pitch: {current_pitch}")
             current_turns, target_turns = self.get_instructions(current_pitch, target_pitch)
             print(f"Current turns: {current_turns}")
@@ -69,7 +71,7 @@ class LagrangeGuitarTuner:
             previous_turns = current_turns
             print("Going again in", end=' ')
             self.iterations += 1
-            countdown(COUNTDOWN_FROM)
+            countdown(self.config[INTERMISSION_COUNTDOWN])
             current_pitch = self.detect_pitch()
         if self.is_tuned(target_pitch - current_pitch):
             print(f"{self.target_note} is tuned.")

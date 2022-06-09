@@ -13,23 +13,23 @@ class PitchDetector:
         self.iterations = 0
         self.max_iterations = iterations
 
-        self.recent_pitch = 440  # defining a4
+        self.base_pitch = 440  # defining a4
+        self.base_octave = 4  # defining a4
         self.detected_pitches = []
 
         self.sample_frequency = 48000  # sample frequency in Hz
         self.sample_length = 1 / self.sample_frequency  # length between two samples in seconds
 
-        self.window_size = 48000  # window size of the DFT in samples TODO: explain the relation with sample frequency
+        self.window_size = 48000  # window size of the DFT in samples
         self.window_step = 12000  # step size of window
         self.window_length = self.window_size / self.sample_frequency  # length of the window in seconds
         self.hanning_window = np.hanning(self.window_size)
         self.window_samples = [0 for _ in range(self.window_size)]
-        self.note_buffer = ["1", "2"]  # TODO: figure this shit out
+        self.note_buffer = ["1", "2"]  # saves the last 2 notes, and only registers the new note if it is equal to the previous
         self.delta_frequency = self.sample_frequency / self.window_size  # frequency step width of the interpolated DFT
 
         self.max_hps = 5  # max number of harmonic product spectrum
         self.tuning_threshold = 1e-6  # tuning is activated if the signal power exceeds this threshold
-        self.white_noise = 0.2  # everything under WHITE_NOISE_THRESH * avg_energy_per_freq is cut off
 
     def find_closest_note(self, pitch):
         """
@@ -41,10 +41,10 @@ class PitchDetector:
             closest_pitch (float): pitch of the closest note in hertz
         """
         notes_count = len(self.notes)
-        note_index = int(np.round(np.log2(pitch / self.recent_pitch) * notes_count))
+        note_index = int(np.round(np.log2(pitch / self.base_pitch) * notes_count))
         closest_note = self.notes[note_index % notes_count] + str(
-            notes_count // 3 + (note_index + notes_count // 4) // notes_count)
-        closest_pitch = self.recent_pitch * 2 ** (note_index / notes_count)
+            self.base_octave + (note_index + 9) // notes_count)
+        closest_pitch = self.base_pitch * 2 ** (note_index / notes_count)
         return closest_note, closest_pitch
 
     def callback(self, data, frames, time, status):
@@ -67,30 +67,20 @@ class PitchDetector:
             magnitude_spec = abs(fft(hanning_samples)[:len(hanning_samples) // 2])
 
             # supress mains hum, set everything below 62Hz to zero
-            for i in range(int(62 / self.delta_frequency)):
+            for i in range(int(60 / self.delta_frequency)):
                 magnitude_spec[i] = 0
 
-            # calculate average energy per frequency for the octave bands
-            # and suppress everything below it
-            for j in range(len(self.octave_bands) - 1):
-                ind_start = int(self.octave_bands[j] / self.delta_frequency)
-                ind_end = int(self.octave_bands[j + 1] / self.delta_frequency)
-                ind_end = ind_end if len(magnitude_spec) > ind_end else len(magnitude_spec)
-                avg_energy_per_freq = (np.linalg.norm(magnitude_spec[ind_start:ind_end], ord=2, axis=0) ** 2) / (
-                        ind_end - ind_start)
-                avg_energy_per_freq **= 0.5  # TODO: why?
-                for i in range(ind_start, ind_end):
-                    magnitude_spec[i] = magnitude_spec[i] if magnitude_spec[
-                                                                 i] > self.white_noise * avg_energy_per_freq else 0
-
-            # interpolate spectrum
+            # Here the DFT spectrum is interpolated. We need to do this as we are required to down sample the spectrum
+            # in the latter steps. Imagine there is a perfect peak at a given frequency and all the frequencies next to
+            # it are zero. If we now down sample the spectrum, there is a certain risk that this peak is simply ignored.
+            # This can be avoided having an interpolated spectrum as the peaks are "smeared" over a larger area.
             mag_spec_ipol = np.interp(np.arange(0, len(magnitude_spec), 1 / self.max_hps),
                                       np.arange(0, len(magnitude_spec)), magnitude_spec)
             mag_spec_ipol = mag_spec_ipol / np.linalg.norm(mag_spec_ipol, ord=2, axis=0)  # normalize it
 
             hps_spec = deepcopy(mag_spec_ipol)
 
-            # calculate the HPS
+            # calculate the HPS and stop if spectrum is completely 0
             for i in range(self.max_hps):
                 tmp_hps_spec = np.multiply(hps_spec[:int(np.ceil(len(mag_spec_ipol) / (i + 1)))],
                                            mag_spec_ipol[::(i + 1)])
@@ -107,11 +97,10 @@ class PitchDetector:
 
             self.note_buffer.insert(0, closest_note)  # note that this is a ringbuffer
             self.note_buffer.pop()
-
-            system('cls' if name == 'nt' else 'clear')
+            # Only print the note, if the previous note is the same.
             if self.note_buffer.count(self.note_buffer[0]) == len(self.note_buffer):
                 self.detected_pitches.append(max_freq)
-                self.recent_pitch = max_freq
+                print(f"Closest note: {closest_note} {max_freq}/{closest_pitch}")
                 self.iterations += 1
 
     def detect(self):

@@ -1,4 +1,7 @@
 {
   "detector_iterations": 13,
-  "countdown_from": 20
+  "start_countdown" : 5,
+  "intermission_countdown": 20,
+  "tuner_iterations" : 3,
+  "tuning_epsilon" : 2
 }

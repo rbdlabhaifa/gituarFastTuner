@@ -1,3 +1,6 @@
 DETECTOR_ITERATIONS = "detector_iterations"
 FREQUENCY_CHANGES_PER_DEGREE = "frequency_change_per_degree"
-COUNTDOWN_FROM = "countdown_from"
+INTERMISSION_COUNTDOWN = "intermission_countdown"
+START_COUNTDOWN = "start_countdown"
+TUNER_ITERATIONS = "tuner_iterations"
+TUNING_EPSILON = "tuning_epsilon"
